@@ -1,0 +1,10 @@
+venv/ 
+__pycache__/ 
+*.pyc 
+frontend/node_modules/ 
+frontend/build/ 
+history.json 
+static/uploads/ 
+static/outputs/ 
+.DS_Store 
+Thumbs.db 

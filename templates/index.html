@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Number Plate Reading System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="container">
+
+    <h1>🚗 Number Plate Reading System</h1>
+
+    <!-- Upload Form -->
+    <form method="POST" enctype="multipart/form-data" class="upload-box">
+        <input type="file" name="file" required>
+        <button type="submit">Detect Plate</button>
+    </form>
+
+    {% if output %}
+    <h2 class="result-title">Result:</h2>
+
+    <div class="result-box">
+
+        <div class="image-box">
+            {% if output.endswith('.jpg') or output.endswith('.png') %}
+                <img src="{{ output }}" alt="Detected Vehicle">
+            {% else %}
+                <video width="360" controls>
+                    <source src="{{ output }}" type="video/mp4">
+                </video>
+            {% endif %}
+        </div>
+
+        {% if plate %}
+        <div class="text-box">
+            <p>Detected Number:</p>
+            <span>{{ plate }}</span>
+            <p>Confidence:</p>
+            <span>{{ confidence }}</span>
+        </div>
+        {% endif %}
+
+    </div>
+    {% endif %}
+
+</div>
+
+</body>
+</html>

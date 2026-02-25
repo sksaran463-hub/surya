@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 from ultralytics import YOLO
 import cv2
@@ -49,6 +49,12 @@ def save_history(plate, confidence, image_path):
     # Write updated history
     with open(HISTORY_FILE, "w") as f:
         json.dump(data, f, indent=4)
+
+
+# ================= PAGE ROUTES =================
+@app.route("/")
+def index_page():
+    return render_template("index.html")
 
 
 # ================= DETECT ROUTE =================

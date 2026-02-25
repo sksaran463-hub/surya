@@ -1,50 +1,152 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <title>Number Plate Reading System</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ANPR – Automatic Number Plate Recognition</title>
+    <meta name="description"
+        content="AI-powered Automatic Number Plate Recognition system. Upload vehicle images or videos and instantly detect license plate numbers with confidence scores." />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
+
 <body>
 
-<div class="container">
+    <!-- ===== NAVBAR ===== -->
+    <nav class="navbar">
+        <div class="nav-links">
+            <a href="/" class="nav-link active" id="nav-detect">🔍 Detect</a>
+        </div>
+        <div class="nav-status">
+            <span class="status-dot pulse"></span>
+            <span class="status-text">Model Active</span>
+        </div>
+    </nav>
 
-    <h1>🚗 Number Plate Reading System</h1>
+    <!-- ===== HERO ===== -->
+    <section class="hero">
+        <div class="hero-bg-orb orb1"></div>
+        <div class="hero-bg-orb orb2"></div>
+        <div class="hero-content">
 
-    <!-- Upload Form -->
-    <form method="POST" enctype="multipart/form-data" class="upload-box">
-        <input type="file" name="file" required>
-        <button type="submit">Detect Plate</button>
-    </form>
+            <h1 class="hero-title">Automatic Number Plate<br><span class="gradient-text">Recognition System</span></h1>
+            <p class="hero-subtitle">Upload any vehicle image or video. Our YOLO + EasyOCR model will instantly detect
+                and read the license plate.</p>
+        </div>
+    </section>
 
-    {% if output %}
-    <h2 class="result-title">Result:</h2>
+    <!-- ===== MAIN CONTENT ===== -->
+    <main class="main-container">
 
-    <div class="result-box">
+        <!-- Upload Card -->
+        <div class="card upload-card" id="uploadCard">
+            <div class="card-header">
+                <div class="card-icon">📁</div>
+                <div>
+                    <h2 class="card-title">Upload Vehicle Media</h2>
+                    <p class="card-desc">Supports JPG, PNG, MP4, AVI formats</p>
+                </div>
+            </div>
 
-        <div class="image-box">
-            {% if output.endswith('.jpg') or output.endswith('.png') %}
-                <img src="{{ output }}" alt="Detected Vehicle">
-            {% else %}
-                <video width="360" controls>
-                    <source src="{{ output }}" type="video/mp4">
-                </video>
-            {% endif %}
+            <div class="drop-zone" id="dropZone">
+                <div class="drop-inner" id="dropInner">
+                    <div class="drop-icon" id="dropIcon">
+                        <svg width="52" height="52" viewBox="0 0 52 52" fill="none">
+                            <circle cx="26" cy="26" r="26" fill="rgba(99,102,241,0.1)" />
+                            <path d="M26 34V18M18 26l8-8 8 8" stroke="#6366f1" stroke-width="2.5" stroke-linecap="round"
+                                stroke-linejoin="round" />
+                            <path d="M17 36h18" stroke="#6366f1" stroke-width="2.5" stroke-linecap="round" />
+                        </svg>
+                    </div>
+                    <p class="drop-main" id="dropMain">Drag & drop your file here</p>
+                    <p class="drop-sub">or</p>
+                    <label class="browse-btn" for="fileInput">Browse Files</label>
+                    <input type="file" id="fileInput" accept=".jpg,.jpeg,.png,.mp4,.avi" hidden />
+                    <p class="drop-hint">Images: JPG, PNG · Videos: MP4, AVI</p>
+                </div>
+                <!-- Preview -->
+                <div class="preview-container" id="previewContainer" style="display:none;">
+                    <img id="previewImg" src="" alt="Preview" class="preview-img" style="display:none;" />
+                    <video id="previewVid" class="preview-img" controls style="display:none;"></video>
+                    <div class="preview-info" id="previewInfo"></div>
+                    <button class="clear-btn" id="clearBtn">✕ Remove</button>
+                </div>
+            </div>
+
+            <button class="detect-btn" id="detectBtn" disabled>
+                <span class="btn-icon">🚗</span>
+                <span class="btn-text">Detect Number Plate</span>
+                <div class="btn-spinner" id="btnSpinner"></div>
+            </button>
         </div>
 
-        {% if plate %}
-        <div class="text-box">
-            <p>Detected Number:</p>
-            <span>{{ plate }}</span>
-            <p>Confidence:</p>
-            <span>{{ confidence }}</span>
+        <!-- Result Card (hidden by default) -->
+        <div class="card result-card" id="resultCard" style="display:none;">
+            <div class="card-header">
+                <div class="card-icon">✅</div>
+                <div>
+                    <h2 class="card-title">Detection Result</h2>
+                    <p class="card-desc">License plate successfully extracted</p>
+                </div>
+                <div class="result-badge" id="confBadge"></div>
+            </div>
+
+            <div class="result-body">
+                <!-- Output Media -->
+                <div class="result-media">
+                    <img id="resultImg" src="" alt="Result" class="result-img" style="display:none;" />
+                    <video id="resultVid" class="result-img" controls style="display:none;"></video>
+                </div>
+
+                <!-- Plate Info -->
+                <div class="plate-info">
+                    <div class="plate-label">Detected Plate Number</div>
+                    <div class="plate-number" id="plateNumber">—</div>
+
+                    <div class="conf-row">
+                        <div class="conf-item">
+                            <span class="conf-label">Confidence Score</span>
+                            <span class="conf-value" id="confValue">—</span>
+                        </div>
+                        <div class="conf-item">
+                            <span class="conf-label">Timestamp</span>
+                            <span class="conf-value" id="timestampValue">—</span>
+                        </div>
+                    </div>
+
+                    <div class="conf-bar-container">
+                        <div class="conf-bar-track">
+                            <div class="conf-bar-fill" id="confBar" style="width:0%"></div>
+                        </div>
+                        <span class="conf-pct" id="confPct">0%</span>
+                    </div>
+
+                    <button class="new-scan-btn" id="newScanBtn">+ New Scan</button>
+                </div>
+            </div>
         </div>
-        {% endif %}
 
-    </div>
-    {% endif %}
+        <!-- Error Card -->
+        <div class="card error-card" id="errorCard" style="display:none;">
+            <div class="error-icon">⚠️</div>
+            <p class="error-msg" id="errorMsg">Something went wrong.</p>
+            <button class="new-scan-btn" id="errorRetryBtn">Try Again</button>
+        </div>
 
-</div>
 
+    </main>
+
+    <!-- ===== FOOTER ===== -->
+    <footer class="footer">
+        <p>ANPR Vision &copy; 2025 · Built with YOLOv8 + EasyOCR</p>
+    </footer>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
+
 </html>
